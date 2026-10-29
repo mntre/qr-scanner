@@ -1,0 +1,16 @@
+Employee Id,First Name,Last Name,Department,Position,Email,Location
+EMP001,Charvin,Penaverde,Human Resources,Software Engineer,charvin.penaverde@convergeict.com,Manila
+EMP002,Luigi ,Espiritu,Finance,HR Manager,luigi.espiritu@convergeict.com,Cebu
+EMP003,Jose,Reyes,Finance,Accountant,jose.reyes@company.com,Manila
+EMP004,Ana,Garcia,Marketing,Marketing Specialist,ana.garcia@company.com,Davao
+EMP005,Carlo,Mendoza,Information Technology,System Administrator,carlo.mendoza@company.com,Manila
+EMP006,Rosa,Bautista,Operations,Operations Lead,rosa.bautista@company.com,Cebu
+EMP007,Miguel,Torres,Finance,Finance Analyst,miguel.torres@company.com,Manila
+EMP008,Liza,Villanueva,Human Resources,Recruitment Specialist,liza.villanueva@company.com,Makati
+EMP009,Ramon,Castillo,Marketing,Content Creator,ramon.castillo@company.com,Quezon City
+EMP010,Grace,Aquino,Operations,Project Manager,grace.aquino@company.com,Manila
+EMP011,Patrick,Navarro,Information Technology,DevOps Engineer,patrick.navarro@company.com,Makati
+EMP012,Diana,Ramos,Legal,Legal Counsel,diana.ramos@company.com,Manila
+EMP013,Eduardo,Flores,Sales,Sales Executive,eduardo.flores@company.com,Cebu
+EMP014,Cristina,Morales,Administration,Executive Assistant,cristina.morales@company.com,Manila
+EMP015,Francis,Lim,Information Technology,QA Engineer,francis.lim@company.com,Davao

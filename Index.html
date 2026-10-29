@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee QR Code Mailer</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #00e676;
+      --green-dark:  #00c853;
+      --green-glow:  rgba(0, 230, 118, 0.25);
+      --bg:          #0d0d0d;
+      --surface:     #1a1a1a;
+      --surface2:    #222222;
+      --border:      #2c2c2c;
+      --text:        #f0f0f0;
+      --muted:       #888888;
+      --danger:      #ff5252;
+      --warn:        #ffd740;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header / Hero ────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #00e676 0%, #00c853 60%, #007940 100%);
+      padding: 48px 24px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 230, 118, 0.15);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 50%, rgba(255,255,255,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 85% 20%, rgba(0,0,0,0.12) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(0,0,0,0.3);
+      color: #0d0d0d;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .hero h1 {
+      font-size: clamp(24px, 5vw, 40px);
+      font-weight: 900;
+      color: #0d0d0d;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      line-height: 1.1;
+      position: relative;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .hero h1 span {
+      display: block;
+      font-size: 0.42em;
+      font-weight: 600;
+      letter-spacing: 4px;
+      margin-top: 8px;
+      opacity: 0.8;
+    }
+    .hero-stars {
+      font-size: 20px;
+      color: rgba(0,0,0,0.25);
+      margin-top: 12px;
+      letter-spacing: 8px;
+    }
+
+    /* ── Tabs ──────────────────────────────────────────────────── */
+    .tabs-nav {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      padding: 0 16px;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: 150px;
+      padding: 16px 20px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn:hover {
+      color: var(--green);
+    }
+    .tab-btn.active {
+      color: var(--green);
+      border-bottom-color: var(--green);
+    }
+
+    /* ── Main Layout ──────────────────────────────────────────── */
+    main {
+      flex: 1;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
+
+    /* ── Tab Content ───────────────────────────────────────────── */
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Card ─────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 230, 118, 0.08);
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+    .card-title .step-num {
+      width: 26px; height: 26px;
+      background: var(--green);
+      color: #0d0d0d;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    /* ── Drop Zone ────────────────────────────────────────────── */
+    #drop-zone {
+      border: 2px dashed var(--green);
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      background: linear-gradient(135deg, rgba(0,230,118,0.05) 0%, rgba(0,200,83,0.02) 100%);
+    }
+    #drop-zone:hover {
+      background: linear-gradient(135deg, rgba(0,230,118,0.12) 0%, rgba(0,200,83,0.08) 100%);
+      border-color: var(--green-dark);
+      transform: scale(1.01);
+    }
+    #drop-zone.dragover {
+      background: linear-gradient(135deg, rgba(0,230,118,0.18) 0%, rgba(0,200,83,0.12) 100%);
+      border-color: var(--green);
+      transform: scale(1.02);
+      box-shadow: 0 0 20px rgba(0,230,118,0.2);
+    }
+    #drop-zone .dz-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 14px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    #drop-zone .dz-label {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.5px;
+    }
+    #drop-zone .dz-hint {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    #drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* File selected state */
+    #file-info {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, rgba(0,230,118,0.08) 0%, rgba(0,200,83,0.04) 100%);
+      border: 1px solid var(--green);
+      border-radius: 10px;
+      margin-top: 18px;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #file-info .fi-icon { font-size: 28px; flex-shrink: 0; }
+    #file-info .fi-name { font-weight: 700; font-size: 14px; color: var(--green); }
+    #file-info .fi-size { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    #file-info .fi-remove {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      padding: 4px 8px;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    #file-info .fi-remove:hover { color: var(--danger); }
+
+    /* ── Preview Table ────────────────────────────────────────── */
+    .preview-section { display: none; }
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead tr { 
+      background: linear-gradient(135deg, var(--surface2) 0%, rgba(34, 34, 34, 0.8) 100%);
+    }
+    th {
+      padding: 12px 14px;
+      text-align: left;
+      color: var(--green);
+      font-weight: 700;
+      letter-spacing: 1px;
+      font-size: 11px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--green);
+    }
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      color: #ddd;
+    }
+    tbody tr {
+      transition: background 0.2s;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { 
+      background: linear-gradient(90deg, rgba(0,230,118,0.08) 0%, transparent 100%);
+    }
+    .badge-id {
+      display: inline-block;
+      background: rgba(0,230,118,0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+    .preview-more {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Summary Stats ────────────────────────────────────────── */
+    .stats-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      flex: 1;
+      min-width: 110px;
+      background: linear-gradient(135deg, rgba(0,230,118,0.05) 0%, rgba(0,200,83,0.02) 100%);
+      border: 1px solid rgba(0,230,118,0.2);
+      border-radius: 12px;
+      padding: 18px 14px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 0%, rgba(0,230,118,0.08) 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .stat-box:hover {
+      transform: translateY(-2px);
+      border-color: var(--green);
+      box-shadow: 0 4px 12px rgba(0, 230, 118, 0.1);
+    }
+    .stat-box:hover::before { opacity: 1; }
+    .stat-box .stat-num {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--green);
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+    .stat-box .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn:hover::before { opacity: 1; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      color: #0d0d0d;
+      box-shadow: 0 4px 12px rgba(0, 230, 118, 0.2);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--green-dark) 0%, #00a040 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 230, 118, 0.3);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { 
+      background: #333; 
+      color: #555; 
+      cursor: not-allowed; 
+      opacity: 0.5;
+      box-shadow: none;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      transition: all 0.3s;
+    }
+    .btn-outline:hover {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(0, 230, 118, 0.08);
+    }
+    .btn-outline:active { transform: scale(0.98); }
+    .btn-row { 
+      display: flex; 
+      gap: 14px; 
+      flex-wrap: wrap; 
+      margin-top: 24px;
+    }
+
+    /* ── Progress ─────────────────────────────────────────────── */
+    #progress-section { display: none; }
+    .progress-bar-wrap {
+      background: var(--surface2);
+      border-radius: 20px;
+      height: 16px;
+      overflow: hidden;
+      margin: 18px 0 10px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-dark), var(--green), #1de9b6);
+      border-radius: 20px;
+      width: 0%;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* ── Results / Log ────────────────────────────────────────── */
+    #results-section { display: none; }
+    .log-wrap {
+      max-height: 320px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(0,230,118,0.02) 0%, rgba(0,200,83,0.01) 100%);
+    }
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+    .log-item:hover { background: rgba(0, 230, 118, 0.05); }
+    .log-item:last-child { border-bottom: none; }
+    .log-status {
+      font-weight: 800;
+      font-size: 10px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      letter-spacing: 1.5px;
+      flex-shrink: 0;
+      min-width: 65px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .log-status.sent    { 
+      background: rgba(0,230,118,0.2); 
+      color: var(--green);
+      border: 1px solid rgba(0,230,118,0.3);
+    }
+    .log-status.skipped { 
+      background: rgba(255,215,64,0.2); 
+      color: var(--warn);
+      border: 1px solid rgba(255,215,64,0.3);
+    }
+    .log-status.failed  { 
+      background: rgba(255,82,82,0.2);  
+      color: var(--danger);
+      border: 1px solid rgba(255,82,82,0.3);
+    }
+    .log-meta { color: var(--muted); }
+    .log-reason { color: var(--warn); font-size: 11px; margin-left: auto; flex-shrink: 0; }
+
+    /* ── Alert / Notification ─────────────────────────────────── */
+    .alert {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 18px;
+      border-left: 4px solid;
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .alert-error   { 
+      background: rgba(255,82,82,0.12);  
+      border-left-color: var(--danger);
+      color: #ff8a80; 
+    }
+    .alert-success { 
+      background: rgba(0,230,118,0.12);  
+      border-left-color: var(--green);
+      color: var(--green); 
+    }
+    .alert-info    { 
+      background: rgba(100,181,246,0.12);
+      border-left-color: #64b5f6;
+      color: #90caf9; 
+    }
+
+    /* ── Spinner ──────────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(0,230,118,0.15);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Check-In Specific Styles ──────────────────────────────── */
+    .checkin-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .checkin-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 8px;
+    }
+    .checkin-input {
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .checkin-input:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+    }
+    .employee-info {
+      display: none;
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(0,230,118,0.08) 0%, rgba(0,200,83,0.04) 100%);
+      border: 1.5px solid var(--green);
+      border-radius: 12px;
+      margin-top: 16px;
+      animation: slideIn 0.3s ease;
+    }
+    .employee-info.active {
+      display: block;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(0, 230, 118, 0.2);
+      font-size: 14px;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .info-value {
+      color: var(--green);
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .timestamp-display {
+      text-align: center;
+      padding: 16px;
+      background: rgba(0, 230, 118, 0.05);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+    .timestamp-value {
+      display: block;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .success-message {
+      display: none;
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(0,230,118,0.12) 0%, rgba(0,200,83,0.08) 100%);
+      border: 1.5px solid var(--green);
+      border-radius: 12px;
+      text-align: center;
+      color: var(--green);
+      font-weight: 700;
+      margin-top: 16px;
+      animation: slideIn 0.3s ease;
+    }
+    .success-message.active {
+      display: block;
+    }
+    .success-icon {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 20px 16px;
+      font-size: 11px;
+      color: var(--border);
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    footer span { color: var(--green); font-weight: 700; }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      main { padding: 24px 12px 40px; }
+      .card { padding: 18px 14px; }
+      .btn  { padding: 12px 20px; font-size: 13px; }
+      #drop-zone { padding: 32px 16px; }
+      #drop-zone .dz-icon { font-size: 40px; }
+      .stats-row { gap: 10px; }
+      .stat-box { min-width: 90px; padding: 14px 10px; }
+      .stat-box .stat-num { font-size: 24px; }
+      .btn-row { gap: 10px; }
+      table { font-size: 12px; }
+      th, td { padding: 9px 10px; }
+      .tab-btn { min-width: 120px; padding: 14px 16px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<header class="hero">
+  <div class="hero-badge">&#9733; Event Management System &#9733;</div>
+  <h1>QR Code Mailer
+    <span>Employee Event Access</span>
+  </h1>
+  <div class="hero-stars">✦ ✦ ✦ ✦ ✦</div>
+</header>
+
+<!-- ── Tab Navigation ────────────────────────────────────────────────────── -->
+<nav class="tabs-nav">
+  <button class="tab-btn active" data-tab="send">Send QR Codes</button>
+  <button class="tab-btn" data-tab="checkin">Check-In</button>
+</nav>
+
+<main>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 1: Send QR Codes
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="send-tab" class="tab-content active">
+
+    <!-- ── Step 1: Upload CSV ────────────────────────────────────────────── -->
+    <div class="card" id="card-upload">
+      <div class="card-title">
+        <div class="step-num">1</div>
+        Upload Employee CSV
+      </div>
+
+      <div id="alert-zone"></div>
+
+      <div id="drop-zone">
+        <span class="dz-icon">📂</span>
+        <div class="dz-label">Drop your CSV file here</div>
+        <div class="dz-hint">or click to browse &nbsp;·&nbsp; Supports .csv files</div>
+        <input type="file" id="csv-file" accept=".csv,text/csv" />
+      </div>
+
+      <div id="file-info">
+        <span class="fi-icon">📄</span>
+        <div>
+          <div class="fi-name" id="fi-name">—</div>
+          <div class="fi-size" id="fi-size">—</div>
+        </div>
+        <button class="fi-remove" id="btn-remove-file" title="Remove file">✕</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-preview" disabled>
+          ⚡ Preview Data
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Step 2: Preview & Confirm ────────────────────────────────────── -->
+    <div class="card preview-section" id="card-preview">
+      <div class="card-title">
+        <div class="step-num">2</div>
+        Preview &amp; Confirm
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" id="stat-total">—</div>
+          <div class="stat-label">Total Rows</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="stat-idcol">—</div>
+          <div class="stat-label">ID Column</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="stat-emailcol">—</div>
+          <div class="stat-label">Email Column</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Employee ID</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody id="preview-tbody"></tbody>
+        </table>
+      </div>
+      <div class="preview-more" id="preview-more"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-send">
+          ✉ Send QR Codes
+        </button>
+        <button class="btn btn-outline" id="btn-cancel">
+          ✕ Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Progress ──────────────────────────────────────────────── -->
+    <div class="card" id="progress-section">
+      <div class="card-title">
+        <div class="step-num">3</div>
+        Sending Emails
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <div class="spinner"></div>
+        <span id="progress-text" style="font-size:14px;color:var(--muted);font-weight:500">Preparing…</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-label">
+        <span id="prog-sent">Sent: 0</span>
+        <span id="prog-pct">0%</span>
+      </div>
+    </div>
+
+    <!-- ── Step 4: Results ───────────────────────────────────────────────── -->
+    <div class="card" id="results-section">
+      <div class="card-title">
+        <div class="step-num">4</div>
+        Results
+      </div>
+
+      <div class="stats-row" id="result-stats"></div>
+
+      <div class="log-wrap" id="log-wrap"></div>
+
+      <div class="btn-row" style="margin-top:20px;">
+        <button class="btn btn-primary" id="btn-restart">
+          ↺ Send Another Batch
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 2: Check-In
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="checkin-tab" class="tab-content">
+
+    <div class="card" id="card-checkin">
+      <div class="card-title">
+        <div class="step-num">🔍</div>
+        Employee Check-In
+      </div>
+
+      <div id="checkin-alert-zone"></div>
+
+      <div class="checkin-input-group">
+        <label class="checkin-label">Scan QR Code or Enter Employee ID</label>
+        <input 
+          type="text" 
+          class="checkin-input" 
+          id="qr-input" 
+          placeholder="Scan QR or enter employee ID…"
+          autofocus
+        />
+      </div>
+
+      <div class="employee-info" id="employee-info">
+        <div class="info-row">
+          <span class="info-label">Employee ID:</span>
+          <span class="info-value" id="info-emp-id">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Full Name:</span>
+          <span class="info-value" id="info-emp-name">—</span>
+        </div>
+        <div class="timestamp-display">
+          <span>Check-In Time</span>
+          <span class="timestamp-value" id="timestamp-display">—</span>
+        </div>
+      </div>
+
+      <div class="success-message" id="success-message">
+        <span class="success-icon">✓</span>
+        <span id="success-text">Check-in logged successfully!</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-checkin" disabled>
+          ✓ Confirm Check-In
+        </button>
+        <button class="btn btn-outline" id="btn-reset-checkin">
+          ↻ Clear & Scan Next
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> &mdash; Powered by <span>QR Mailer</span> on Google Apps Script
+</footer>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // TAB SWITCHING
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabName = btn.dataset.tab;
+
+      // Deactivate all tabs
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+
+      // Activate selected tab
+      btn.classList.add('active');
+      document.getElementById(tabName + '-tab').classList.add('active');
+
+      // Auto-focus QR input when switching to check-in tab
+      if (tabName === 'checkin') {
+        setTimeout(() => document.getElementById('qr-input').focus(), 100);
+      }
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEND QR CODES TAB
+  // ─────────────────────────────────────────────────────────────────────────
+
+  let csvBase64   = null;
+  let parsedMeta  = null;
+
+  // DOM refs - Send QR
+  const fileInput      = document.getElementById('csv-file');
+  const dropZone       = document.getElementById('drop-zone');
+  const fileInfo       = document.getElementById('file-info');
+  const fiName         = document.getElementById('fi-name');
+  const fiSize         = document.getElementById('fi-size');
+  const btnRemove      = document.getElementById('btn-remove-file');
+  const btnPreview     = document.getElementById('btn-preview');
+  const btnSend        = document.getElementById('btn-send');
+  const btnCancel      = document.getElementById('btn-cancel');
+  const btnRestart     = document.getElementById('btn-restart');
+  const alertZone      = document.getElementById('alert-zone');
+  const cardPreview    = document.getElementById('card-preview');
+  const progressSec    = document.getElementById('progress-section');
+  const resultsSec     = document.getElementById('results-section');
+  const previewTbody   = document.getElementById('preview-tbody');
+  const previewMore    = document.getElementById('preview-more');
+  const progressText   = document.getElementById('progress-text');
+  const progressFill   = document.getElementById('progress-fill');
+  const progSent       = document.getElementById('prog-sent');
+  const progPct        = document.getElementById('prog-pct');
+
+  // Drag-and-drop
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  btnRemove.addEventListener('click', resetFile);
+
+  // File handling
+  function handleFile(file) {
+    if (!file.name.endsWith('.csv')) {
+      showAlert('Please select a valid .csv file.', 'error');
+      return;
+    }
+    clearAlert();
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const raw = ev.target.result;
+      csvBase64  = raw.split(',')[1];
+      fiName.textContent = file.name;
+      fiSize.textContent = formatBytes(file.size);
+      fileInfo.style.display = 'flex';
+      btnPreview.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetFile() {
+    csvBase64 = null;
+    parsedMeta = null;
+    fileInput.value = '';
+    fileInfo.style.display = 'none';
+    btnPreview.disabled = true;
+    cardPreview.style.display = 'none';
+    clearAlert();
+  }
+
+  btnPreview.addEventListener('click', () => {
+    btnPreview.disabled = true;
+    btnPreview.innerHTML = '<span class="spinner"></span> Parsing…';
+
+    google.script.run
+      .withSuccessHandler(onParsed)
+      .withFailureHandler(err => {
+        showAlert('Error: ' + err.message, 'error');
+        btnPreview.disabled = false;
+        btnPreview.innerHTML = '⚡ Preview Data';
+      })
+      .parseCSV(csvBase64);
+  });
+
+  function onParsed(result) {
+    btnPreview.disabled = false;
+    btnPreview.innerHTML = '⚡ Preview Data';
+
+    if (result.error) {
+      showAlert(result.error, 'error');
+      return;
+    }
+
+    parsedMeta = result;
+
+    document.getElementById('stat-total').textContent    = result.totalRows;
+    document.getElementById('stat-idcol').textContent    = result.headers[result.employeeIdCol];
+    document.getElementById('stat-emailcol').textContent = result.headers[result.emailCol];
+
+    previewTbody.innerHTML = '';
+    result.preview.forEach((row, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:var(--muted)">${i + 1}</td>
+        <td><span class="badge-id">${esc(row.employeeId)}</span></td>
+        <td>${esc(row.email)}</td>
+      `;
+      previewTbody.appendChild(tr);
+    });
+
+    if (result.totalRows > 5) {
+      previewMore.textContent = `Showing 5 of ${result.totalRows} rows`;
+    } else {
+      previewMore.textContent = '';
+    }
+
+    cardPreview.style.display = 'block';
+    cardPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  btnSend.addEventListener('click', () => {
+    if (!parsedMeta) return;
+
+    cardPreview.style.display = 'none';
+    progressSec.style.display = 'block';
+    progressText.textContent  = `Sending QR codes to ${parsedMeta.totalRows} employees…`;
+    progressFill.style.width  = '10%';
+    progSent.textContent      = 'Sent: 0';
+    progPct.textContent       = '0%';
+
+    let fake = 10;
+    const fakeTimer = setInterval(() => {
+      if (fake < 85) { fake += 2; progressFill.style.width = fake + '%'; }
+    }, 800);
+
+    google.script.run
+      .withSuccessHandler(results => {
+        clearInterval(fakeTimer);
+        progressFill.style.width = '100%';
+        setTimeout(() => showResults(results), 400);
+      })
+      .withFailureHandler(err => {
+        clearInterval(fakeTimer);
+        progressSec.style.display = 'none';
+        showAlert('Sending failed: ' + err.message, 'error');
+        cardPreview.style.display = 'block';
+      })
+      .processAndSendQRCodes(csvBase64, {
+        employeeIdCol: parsedMeta.employeeIdCol,
+        emailCol:      parsedMeta.emailCol
+      });
+  });
+
+  btnCancel.addEventListener('click', () => {
+    cardPreview.style.display = 'none';
+    resetFile();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  function showResults(results) {
+    progressSec.style.display = 'none';
+    resultsSec.style.display  = 'block';
+
+    if (results.error) {
+      document.getElementById('result-stats').innerHTML =
+        `<div class="alert alert-error" style="width:100%">&#9888; ${esc(results.error)}</div>`;
+      return;
+    }
+
+    const failed  = results.failed || 0;
+    const sent    = results.sent   || 0;
+    const skipped = results.log.filter(l => l.status === 'SKIPPED').length;
+    document.getElementById('result-stats').innerHTML = `
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--green)">${sent}</div>
+        <div class="stat-label">Sent</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--danger)">${failed - skipped}</div>
+        <div class="stat-label">Failed</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--warn)">${skipped}</div>
+        <div class="stat-label">Skipped</div>
+      </div>
+    `;
+
+    const logWrap = document.getElementById('log-wrap');
+    logWrap.innerHTML = '';
+    (results.log || []).forEach(entry => {
+      const cls = entry.status === 'SENT' ? 'sent' : entry.status === 'SKIPPED' ? 'skipped' : 'failed';
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      div.innerHTML = `
+        <span class="log-status ${cls}">${entry.status}</span>
+        <span class="badge-id">${esc(entry.employeeId)}</span>
+        <span class="log-meta">${esc(entry.email)}</span>
+        ${entry.reason ? `<span class="log-reason">⚠ ${esc(entry.reason)}</span>` : ''}
+      `;
+      logWrap.appendChild(div);
+    });
+
+    resultsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  btnRestart.addEventListener('click', () => {
+    resultsSec.style.display = 'none';
+    resetFile();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CHECK-IN TAB
+  // ─────────────────────────────────────────────────────────────────────────
+
+  let currentEmployee = null;
+
+  const qrInput = document.getElementById('qr-input');
+  const employeeInfo = document.getElementById('employee-info');
+  const infoEmpId = document.getElementById('info-emp-id');
+  const infoEmpName = document.getElementById('info-emp-name');
+  const timestampDisplay = document.getElementById('timestamp-display');
+  const btnCheckin = document.getElementById('btn-checkin');
+  const btnResetCheckin = document.getElementById('btn-reset-checkin');
+  const successMessage = document.getElementById('success-message');
+  const checkinAlertZone = document.getElementById('checkin-alert-zone');
+
+  qrInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+      handleQRScan();
+    }
+  });
+
+  qrInput.addEventListener('input', () => {
+    // Clear success message when user types
+    if (successMessage.classList.contains('active')) {
+      successMessage.classList.remove('active');
+    }
+  });
+
+  function handleQRScan() {
+    const input = qrInput.value.trim();
+    if (!input) {
+      showCheckinAlert('Please enter an Employee ID', 'error');
+      return;
+    }
+
+    clearCheckinAlert();
+    btnCheckin.disabled = true;
+    btnCheckin.innerHTML = '<span class="spinner"></span> Searching…';
+
+    google.script.run
+      .withSuccessHandler(result => {
+        if (result.found) {
+          currentEmployee = result;
+          displayEmployeeInfo(result);
+          btnCheckin.disabled = false;
+          btnCheckin.innerHTML = '✓ Confirm Check-In';
+        } else {
+          btnCheckin.disabled = true;
+          btnCheckin.innerHTML = '✓ Confirm Check-In';
+          showCheckinAlert(result.error || 'Employee not found', 'error');
+          resetCheckin();
+        }
+      })
+      .withFailureHandler(err => {
+        btnCheckin.disabled = true;
+        btnCheckin.innerHTML = '✓ Confirm Check-In';
+        showCheckinAlert('Error: ' + err.message, 'error');
+        resetCheckin();
+      })
+      .getEmployeeById(input);
+  }
+
+  function displayEmployeeInfo(employee) {
+    infoEmpId.textContent = employee.employeeId;
+    infoEmpName.textContent = employee.fullName;
+    timestampDisplay.textContent = new Date().toLocaleString();
+    employeeInfo.classList.add('active');
+  }
+
+  btnCheckin.addEventListener('click', () => {
+    if (!currentEmployee) return;
+
+    btnCheckin.disabled = true;
+    btnCheckin.innerHTML = '<span class="spinner"></span> Logging…';
+
+    google.script.run
+      .withSuccessHandler(result => {
+        if (result.success) {
+          successMessage.classList.add('active');
+          qrInput.value = '';
+          employeeInfo.classList.remove('active');
+          btnCheckin.innerHTML = '✓ Confirm Check-In';
+          setTimeout(() => {
+            qrInput.focus();
+          }, 1500);
+        } else {
+          showCheckinAlert(result.error || 'Check-in failed', 'error');
+          btnCheckin.disabled = false;
+          btnCheckin.innerHTML = '✓ Confirm Check-In';
+        }
+      })
+      .withFailureHandler(err => {
+        showCheckinAlert('Error: ' + err.message, 'error');
+        btnCheckin.disabled = false;
+        btnCheckin.innerHTML = '✓ Confirm Check-In';
+      })
+      .logCheckIn(currentEmployee.employeeId, currentEmployee.fullName);
+  });
+
+  btnResetCheckin.addEventListener('click', () => {
+    resetCheckin();
+    qrInput.focus();
+  });
+
+  function resetCheckin() {
+    currentEmployee = null;
+    qrInput.value = '';
+    employeeInfo.classList.remove('active');
+    successMessage.classList.remove('active');
+    clearCheckinAlert();
+    btnCheckin.disabled = true;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // UTILITIES
+  // ─────────────────────────────────────────────────────────────────────────
+
+  function showAlert(msg, type) {
+    alertZone.innerHTML = `<div class="alert alert-${type}">&#9888; ${esc(msg)}</div>`;
+  }
+  function clearAlert() { alertZone.innerHTML = ''; }
+
+  function showCheckinAlert(msg, type) {
+    checkinAlertZone.innerHTML = `<div class="alert alert-${type}">&#9888; ${esc(msg)}</div>`;
+  }
+  function clearCheckinAlert() { checkinAlertZone.innerHTML = ''; }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+</script>
+</body>
+</html>

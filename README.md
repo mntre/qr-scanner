@@ -2,6 +2,8 @@
 
 A standalone QR code scanner application for real-time employee check-in logging to Google Sheets.
 
+**Deployed on Vercel for full camera access and HTTPS support.**
+
 ## Features
 
 ✅ **Camera-based QR scanning** - Real-time QR code detection using html5-qrcode  
@@ -50,7 +52,6 @@ Google Sheet ← Logs check-in records
 ## Files
 
 - `index.html` - Main QR scanner application
-- `vercel.json` - Vercel deployment configuration
 - `.vercelignore` - Files to exclude from deployment
 
 ## Deployment

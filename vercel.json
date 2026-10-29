@@ -1,6 +1,7 @@
 {
   "buildCommand": "",
   "installCommand": "",
-  "framework": "html",
+  "outputDirectory": ".",
+  "framework": null,
   "public": true
 }
